@@ -12372,6 +12372,7 @@ Keep Prob Tests Passed.
 <span class="sd">    : return: A tensor that represents convolution and max pooling of x_tensor</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># get the shape for the x_tensor as a list; needed for the &quot;depth&quot; of the weight variable</span>
+    <span class="c1"># got stddev=0.1 from slack channel; this is a huge booster for overfitting. :)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x_tensor</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
     <span class="n">weight</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="n">conv_ksize</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">conv_ksize</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">conv_num_outputs</span><span class="p">],</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
     <span class="n">bias</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="n">conv_num_outputs</span><span class="p">]))</span>
@@ -12647,30 +12648,33 @@ Keep Prob Tests Passed.
     <span class="c1"># also too much dropout layers converge the training accuracy to 10 %</span>
     <span class="c1"># stride size 1 works well, also stride size 2 is okay</span>
     
+    <span class="c1"># from my personal view, this is overengineered. But I run in severe overfitting problems </span>
+    <span class="c1"># with an accuracy higher than 95 %. So my main goal was to keep the train error &quot;low&quot;. </span>
+    <span class="c1"># This architecture helped me a lot. Also there is no hugh difference between training error and validation error</span>
+    
     <span class="c1"># I guess, this shouldn&#39;t be an inception module.</span>
-    <span class="c1"># input data has shape (32,32,3) to (16, 16, 96)</span>
+    <span class="c1"># input data has shape (32,32,3) to (16, 16, 32)</span>
     <span class="n">conv1</span> <span class="o">=</span> <span class="n">conv2d_maxpool</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
     <span class="c1"># print(conv1.get_shape().as_list())</span>
     <span class="c1">#conv1 = tf.nn.dropout(conv1, keep_prob)</span>
 
-    <span class="c1"># input data has shape (16, 16, 96) to (8, 8, 192)</span>
+    <span class="c1"># input data has shape (16, 16, 32) to (8, 8, 64)</span>
     <span class="n">conv2</span> <span class="o">=</span> <span class="n">conv2d_maxpool</span><span class="p">(</span><span class="n">conv1</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
     <span class="c1">#print(conv2.get_shape().as_list())</span>
     <span class="c1">#conv2 = tf.nn.dropout(conv2, keep_prob)</span>
 
-    <span class="c1"># not used</span>
+    <span class="c1"># (8, 8, 64) to  (4, 4, 128)</span>
     <span class="n">conv3</span> <span class="o">=</span> <span class="n">conv2d_maxpool</span><span class="p">(</span><span class="n">conv2</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
     <span class="c1">#print(conv3.get_shape().as_list())</span>
-    <span class="c1"># from (8, 8, 192) to 12288</span>
-    <span class="c1">#conv3 = tf.nn.dropout(conv3, keep_prob)</span>
+
 
     <span class="n">x_tensor</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">conv3</span><span class="p">)</span>
     
-    <span class="c1"># from 12288 to 1024</span>
+    <span class="c1"># from 2048 to 1024</span>
     <span class="n">fc1</span> <span class="o">=</span> <span class="n">fully_conn</span><span class="p">(</span><span class="n">x_tensor</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
     <span class="n">fc1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">fc1</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span>
 
-    <span class="c1"># from 1024 to 256</span>
+    <span class="c1"># from 1024 to 128</span>
     <span class="n">fc2</span> <span class="o">=</span> <span class="n">fully_conn</span><span class="p">(</span><span class="n">fc1</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
     <span class="n">fc2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">fc2</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span>
 
@@ -12863,6 +12867,8 @@ Keep Prob Tests Passed.
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># TODO: Tune Parameters</span>
+<span class="c1"># my main problem was to prevent overfitting. I even went down to an keep probability of 0.3, but didn;t helped.</span>
+
 <span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">256</span>
 <span class="n">keep_probability</span> <span class="o">=</span> <span class="mf">0.5</span>
@@ -13042,6 +13048,17 @@ Epoch 10, CIFAR-10 Batch 5:  Loss:     0.7867 Validation accuracy: 0.775000
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Summary">Summary<a class="anchor-link" href="#Summary">&#182;</a></h1><p>I had serious problems with overfitting, why I reduced the output lazer of the convnet to 32 and 64. Also I intruduced a 3rd layer, which actually helped me, too. An improvement between training error and validation error was - opposite the advices - to make the net complicated. Here, I get an training error of around 75 % and an validation error of 60 %. With a further decrease of the epoch could be helpful. A decrease of the dropped out layers doesn't affect it too much. The batch size doesn't have a hugh effect on training error.</p>
+<p>Probably I could spent some time for looking on the matrix for the different convnets. Here I would probably understand more, how those parameters work. Anyway, I spent quite a lot time in parameter tuning and it is somehow unsatisfying, that the validation error is so low. Otherwise I gained a lot of intuition, how to tune a cnn. :)</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered">
 <div class="prompt input_prompt">
